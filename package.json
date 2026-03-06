@@ -11,7 +11,7 @@
     "bcryptjs": "^2.4.3",
     "formidable": "^3.5.2",
     "jsonwebtoken": "^9.0.2",
-    "next": "^15.2.4",
+    "next": "^14.2.35",
     "react": "^18",
     "react-dom": "^18"
   }
