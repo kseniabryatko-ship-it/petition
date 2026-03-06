@@ -1,0 +1,129 @@
+{
+  "settings": {
+    "petition_title": "Петиция о присвоении звания Героя Российской Федерации (посмертно)",
+    "petition_text": "Настоящим мы, нижеподписавшиеся граждане Российской Федерации, выражаем свою волю и обращаемся к Президенту Российской Федерации с ходатайством о присвоении звания **Героя Российской Федерации** (посмертно).\n\nСвоим беззаветным служением Отечеству, личным мужеством и самопожертвованием этот человек явил образец истинного патриотизма. Его подвиг сохранится в памяти народа навсегда.\n\nПросим рассмотреть настоящую петицию и принять решение о присвоении высшей государственной награды в знак признания заслуг перед Родиной.",
+    "redirect_url": "https://github.com/kseniabryatko-ship-it/522rescueteam",
+    "petition_image": "",
+    "goal": "5000",
+    "admin_password": "$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi",
+    "user_password": "$2a$10$dOnD3UeuoUD/.R7Yyh7s3OqtakTcx8J1P2DduNnrh0Tl02loUkJTa"
+  },
+  "signatures": [
+    {
+      "id": 1,
+      "first_name": "ффф",
+      "last_name": "ыапывпв",
+      "phone": "+7123123",
+      "consent": "no",
+      "created_at": "2026-03-06T09:57:55.438Z"
+    },
+    {
+      "id": 2,
+      "first_name": "фывапт",
+      "last_name": "ыфватвпа р",
+      "phone": "61574153154",
+      "consent": "no",
+      "created_at": "2026-03-06T10:00:10.427Z"
+    },
+    {
+      "id": 3,
+      "first_name": "aesrhdtjythrgseafwgsd",
+      "last_name": "sadhfngmh",
+      "phone": "56897461",
+      "consent": "no",
+      "created_at": "2026-03-06T10:03:56.422Z"
+    },
+    {
+      "id": 4,
+      "first_name": "впармоилтдж",
+      "last_name": "вапрол",
+      "phone": "псролдж",
+      "consent": "no",
+      "created_at": "2026-03-06T10:31:42.776Z"
+    },
+    {
+      "id": 5,
+      "first_name": "htjykuiytre",
+      "last_name": "egrhtjykuliou",
+      "phone": "aertjykul7",
+      "consent": "no",
+      "created_at": "2026-03-06T15:14:19.973Z"
+    },
+    {
+      "id": 6,
+      "first_name": "fdghp]\\",
+      "last_name": "asdfgjhkl",
+      "phone": "hjdkretjykuli",
+      "consent": "no",
+      "created_at": "2026-03-06T15:17:06.676Z"
+    }
+  ],
+  "user_logs": [
+    {
+      "id": 1,
+      "action": "signed",
+      "ip": "::1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+      "details": "ыапывпв ффф | +7123123 | согласие: no",
+      "created_at": "2026-03-06T09:57:55.439Z"
+    },
+    {
+      "id": 2,
+      "action": "view_signatures",
+      "ip": "::1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+      "details": "Открыл страницу подписей",
+      "created_at": "2026-03-06T09:59:29.928Z"
+    },
+    {
+      "id": 3,
+      "action": "signed",
+      "ip": "::1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+      "details": "ыфватвпа р фывапт | 61574153154 | согласие: no",
+      "created_at": "2026-03-06T10:00:10.428Z"
+    },
+    {
+      "id": 4,
+      "action": "signed",
+      "ip": "::1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+      "details": "sadhfngmh aesrhdtjythrgseafwgsd | 56897461 | согласие: no",
+      "created_at": "2026-03-06T10:03:56.432Z"
+    },
+    {
+      "id": 5,
+      "action": "view_signatures",
+      "ip": "::1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+      "details": "Открыл страницу подписей",
+      "created_at": "2026-03-06T10:06:03.173Z"
+    },
+    {
+      "id": 6,
+      "action": "signed",
+      "ip": "::1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+      "details": "вапрол впармоилтдж | псролдж | согласие: no",
+      "created_at": "2026-03-06T10:31:42.809Z"
+    },
+    {
+      "id": 7,
+      "action": "signed",
+      "ip": "::1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+      "details": "egrhtjykuliou htjykuiytre | aertjykul7 | согласие: no",
+      "created_at": "2026-03-06T15:14:19.974Z"
+    },
+    {
+      "id": 8,
+      "action": "signed",
+      "ip": "::1",
+      "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36",
+      "details": "asdfgjhkl fdghp]\\ | hjdkretjykuli | согласие: no",
+      "created_at": "2026-03-06T15:17:06.677Z"
+    }
+  ],
+  "next_sig_id": 7,
+  "next_log_id": 9
+}
