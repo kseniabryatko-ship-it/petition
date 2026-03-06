@@ -14,6 +14,6 @@ export default async function handler(req, res) {
   if (!new_password || new_password.length < 4)
     return res.status(400).json({ error: "Пароль должен быть не менее 4 символов" });
   const hash = await bcrypt.hash(new_password, 10);
-  getDb().setSetting("user_password", hash);
+  await getDb().setSetting("user_password", hash);
   res.json({ success: true });
 }

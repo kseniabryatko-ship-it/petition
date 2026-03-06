@@ -1,10 +1,6 @@
-const path = require("path");
-const fs = require("fs");
+const { put, get, list } = require('@vercel/blob');
 
-const DATA_PATH = path.join(process.cwd(), "data", "db.json");
-const dataDir = path.dirname(DATA_PATH);
-
-if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+const DB_KEY = 'petition-db/db.json';
 
 const DEFAULTS = {
   settings: {
@@ -22,13 +18,24 @@ const DEFAULTS = {
   next_log_id: 1
 };
 
-function readDb() {
-  if (!fs.existsSync(DATA_PATH)) {
-    fs.writeFileSync(DATA_PATH, JSON.stringify(DEFAULTS, null, 2), "utf8");
-    return JSON.parse(JSON.stringify(DEFAULTS));
-  }
+let _cache = null;
+let _cacheTime = 0;
+const CACHE_TTL = 2000; // 2 seconds
+
+async function readDb() {
+  // use cache to avoid too many blob reads
+  if (_cache && Date.now() - _cacheTime < CACHE_TTL) return _cache;
+
   try {
-    const data = JSON.parse(fs.readFileSync(DATA_PATH, "utf8"));
+    const { blobs } = await list({ prefix: 'petition-db/' });
+    const blob = blobs.find(b => b.pathname === DB_KEY);
+    if (!blob) {
+      _cache = JSON.parse(JSON.stringify(DEFAULTS));
+      _cacheTime = Date.now();
+      return _cache;
+    }
+    const res = await fetch(blob.url);
+    const data = await res.json();
     // merge missing defaults
     if (!data.settings) data.settings = DEFAULTS.settings;
     else {
@@ -38,71 +45,82 @@ function readDb() {
     }
     if (!data.signatures) data.signatures = [];
     if (!data.user_logs) data.user_logs = [];
-    if (!data.next_sig_id) data.next_sig_id = (data.signatures.length || 0) + 1;
-    if (!data.next_log_id) data.next_log_id = (data.user_logs.length || 0) + 1;
+    if (!data.next_sig_id) data.next_sig_id = data.signatures.length + 1;
+    if (!data.next_log_id) data.next_log_id = data.user_logs.length + 1;
+    _cache = data;
+    _cacheTime = Date.now();
     return data;
-  } catch {
+  } catch (e) {
+    console.error('readDb error:', e);
     return JSON.parse(JSON.stringify(DEFAULTS));
   }
 }
 
-function writeDb(data) {
-  fs.writeFileSync(DATA_PATH, JSON.stringify(data, null, 2), "utf8");
+async function writeDb(data) {
+  _cache = data;
+  _cacheTime = Date.now();
+  await put(DB_KEY, JSON.stringify(data), {
+    access: 'public',
+    allowOverwrite: true,
+    contentType: 'application/json'
+  });
 }
 
 function getDb() {
-  const data = readDb();
   return {
-    // settings
-    getSetting(key) {
+    async getSetting(key) {
+      const data = await readDb();
       return data.settings[key];
     },
-    getSettings(keys) {
+    async getSettings(keys) {
+      const data = await readDb();
       const result = {};
       for (const k of keys) result[k] = data.settings[k];
       return result;
     },
-    setSetting(key, value) {
+    async setSetting(key, value) {
+      const data = await readDb();
       data.settings[key] = value;
-      writeDb(data);
+      await writeDb(data);
     },
-    setSettings(obj) {
+    async setSettings(obj) {
+      const data = await readDb();
       Object.assign(data.settings, obj);
-      writeDb(data);
+      await writeDb(data);
     },
-
-    // signatures
-    addSignature({ first_name, last_name, phone, consent }) {
+    async addSignature({ first_name, last_name, phone, consent }) {
+      const data = await readDb();
       const sig = {
         id: data.next_sig_id++,
         first_name, last_name, phone, consent,
         created_at: new Date().toISOString()
       };
       data.signatures.push(sig);
-      writeDb(data);
+      await writeDb(data);
       return sig;
     },
-    getSignatures() {
+    async getSignatures() {
+      const data = await readDb();
       return [...data.signatures].reverse();
     },
-    countSignatures() {
+    async countSignatures() {
+      const data = await readDb();
       return data.signatures.length;
     },
-
-    // logs
-    addLog({ action, ip, user_agent, details }) {
+    async addLog({ action, ip, user_agent, details }) {
+      const data = await readDb();
       const log = {
         id: data.next_log_id++,
         action, ip: ip || "", user_agent: user_agent || "", details: details || "",
         created_at: new Date().toISOString()
       };
       data.user_logs.push(log);
-      // keep only last 500
       if (data.user_logs.length > 500) data.user_logs = data.user_logs.slice(-500);
-      writeDb(data);
+      await writeDb(data);
       return log;
     },
-    getLogs() {
+    async getLogs() {
+      const data = await readDb();
       return [...data.user_logs].reverse().slice(0, 500);
     }
   };

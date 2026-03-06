@@ -6,7 +6,7 @@ function auth(req) {
   try { jwt.verify((req.headers.authorization||"").replace("Bearer ",""), SECRET); return true; } catch { return false; }
 }
 
-export default function handler(req, res) {
+export default async function handler(req, res) {
   if (!auth(req)) return res.status(401).json({ error: "Unauthorized" });
   if (req.method !== "POST") return res.status(405).end();
   const allowed = ["petition_title","petition_text","redirect_url","petition_image","goal"];
@@ -14,6 +14,6 @@ export default function handler(req, res) {
   for (const key of allowed) {
     if (req.body[key] !== undefined) update[key] = req.body[key];
   }
-  getDb().setSettings(update);
+  await getDb().setSettings(update);
   res.json({ success: true });
 }

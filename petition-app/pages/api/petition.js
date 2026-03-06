@@ -1,8 +1,8 @@
 const { getDb } = require("../../lib/db");
 
-export default function handler(req, res) {
+export default async function handler(req, res) {
   const db = getDb();
-  const settings = db.getSettings(["petition_title","petition_text","petition_image","goal","redirect_url"]);
-  const count = db.countSignatures();
+  const settings = await db.getSettings(["petition_title","petition_text","petition_image","goal","redirect_url"]);
+  const count = await db.countSignatures();
   res.json({ ...settings, count });
 }
