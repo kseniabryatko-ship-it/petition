@@ -61,6 +61,7 @@ async function writeDb(data) {
   _cacheTime = Date.now();
   await put(DB_KEY, JSON.stringify(data), {
     access: 'public',
+    addRandomSuffix: false,
     allowOverwrite: true,
     contentType: 'application/json'
   });
