@@ -1,6 +1,6 @@
-const { put, get, list } = require('@vercel/blob');
+const { put, list, del } = require('@vercel/blob');
 
-const DB_KEY = 'petition-db/db.json';
+const DB_PREFIX = 'petition-db/db';
 
 const DEFAULTS = {
   settings: {
@@ -18,26 +18,30 @@ const DEFAULTS = {
   next_log_id: 1
 };
 
+let _blobUrl = null; // store the current blob url
 let _cache = null;
 let _cacheTime = 0;
-const CACHE_TTL = 2000; // 2 seconds
+const CACHE_TTL = 3000;
 
 async function readDb() {
-  // use cache to avoid too many blob reads
   if (_cache && Date.now() - _cacheTime < CACHE_TTL) return _cache;
 
   try {
-    const { blobs } = await list({ prefix: 'petition-db/' });
-    const blob = blobs.find(b => b.pathname === DB_KEY);
-    if (!blob) {
+    const { blobs } = await list({ prefix: DB_PREFIX });
+    if (!blobs || blobs.length === 0) {
       _cache = JSON.parse(JSON.stringify(DEFAULTS));
       _cacheTime = Date.now();
       return _cache;
     }
-    const res = await fetch(blob.url);
+
+    // pick the most recently modified blob
+    const blob = blobs.sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt))[0];
+    _blobUrl = blob.url;
+
+    const res = await fetch(blob.downloadUrl || blob.url);
     const data = await res.json();
-    // merge missing defaults
-    if (!data.settings) data.settings = DEFAULTS.settings;
+
+    if (!data.settings) data.settings = { ...DEFAULTS.settings };
     else {
       for (const [k, v] of Object.entries(DEFAULTS.settings)) {
         if (data.settings[k] === undefined) data.settings[k] = v;
@@ -47,6 +51,7 @@ async function readDb() {
     if (!data.user_logs) data.user_logs = [];
     if (!data.next_sig_id) data.next_sig_id = data.signatures.length + 1;
     if (!data.next_log_id) data.next_log_id = data.user_logs.length + 1;
+
     _cache = data;
     _cacheTime = Date.now();
     return data;
@@ -59,12 +64,23 @@ async function readDb() {
 async function writeDb(data) {
   _cache = data;
   _cacheTime = Date.now();
-  await put(DB_KEY, JSON.stringify(data), {
+
+  try {
+    // delete all old blobs first
+    const { blobs } = await list({ prefix: DB_PREFIX });
+    if (blobs && blobs.length > 0) {
+      await Promise.all(blobs.map(b => del(b.url)));
+    }
+  } catch (e) {
+    console.error('del error:', e);
+  }
+
+  // write new blob
+  const result = await put(`${DB_PREFIX}.json`, JSON.stringify(data), {
     access: 'public',
-    addRandomSuffix: false,
-    allowOverwrite: true,
     contentType: 'application/json'
   });
+  _blobUrl = result.url;
 }
 
 function getDb() {
@@ -128,3 +144,4 @@ function getDb() {
 }
 
 module.exports = { getDb };
+
