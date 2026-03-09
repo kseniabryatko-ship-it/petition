@@ -1,6 +1,9 @@
-const { put, list, del } = require('@vercel/blob');
+const { Redis } = require('@upstash/redis');
 
-const DB_PREFIX = 'petition-db/db';
+const redis = new Redis({
+  url: process.env.KV_REST_API_URL,
+  token: process.env.KV_REST_API_TOKEN,
+});
 
 const DEFAULTS = {
   settings: {
@@ -11,137 +14,54 @@ const DEFAULTS = {
     goal: "5000",
     admin_password: "$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi",
     user_password: "$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi"
-  },
-  signatures: [],
-  user_logs: [],
-  next_sig_id: 1,
-  next_log_id: 1
+  }
 };
-
-let _blobUrl = null; // store the current blob url
-let _cache = null;
-let _cacheTime = 0;
-const CACHE_TTL = 3000;
-
-async function readDb() {
-  if (_cache && Date.now() - _cacheTime < CACHE_TTL) return _cache;
-
-  try {
-    const { blobs } = await list({ prefix: DB_PREFIX });
-    if (!blobs || blobs.length === 0) {
-      _cache = JSON.parse(JSON.stringify(DEFAULTS));
-      _cacheTime = Date.now();
-      return _cache;
-    }
-
-    // pick the most recently modified blob
-    const blob = blobs.sort((a, b) => new Date(b.uploadedAt) - new Date(a.uploadedAt))[0];
-    _blobUrl = blob.url;
-
-    const res = await fetch(blob.downloadUrl || blob.url);
-    const data = await res.json();
-
-    if (!data.settings) data.settings = { ...DEFAULTS.settings };
-    else {
-      for (const [k, v] of Object.entries(DEFAULTS.settings)) {
-        if (data.settings[k] === undefined) data.settings[k] = v;
-      }
-    }
-    if (!data.signatures) data.signatures = [];
-    if (!data.user_logs) data.user_logs = [];
-    if (!data.next_sig_id) data.next_sig_id = data.signatures.length + 1;
-    if (!data.next_log_id) data.next_log_id = data.user_logs.length + 1;
-
-    _cache = data;
-    _cacheTime = Date.now();
-    return data;
-  } catch (e) {
-    console.error('readDb error:', e);
-    return JSON.parse(JSON.stringify(DEFAULTS));
-  }
-}
-
-async function writeDb(data) {
-  _cache = data;
-  _cacheTime = Date.now();
-
-  try {
-    // delete all old blobs first
-    const { blobs } = await list({ prefix: DB_PREFIX });
-    if (blobs && blobs.length > 0) {
-      await Promise.all(blobs.map(b => del(b.url)));
-    }
-  } catch (e) {
-    console.error('del error:', e);
-  }
-
-  // write new blob
-  const result = await put(`${DB_PREFIX}.json`, JSON.stringify(data), {
-    access: 'public',
-    contentType: 'application/json'
-  });
-  _blobUrl = result.url;
-}
 
 function getDb() {
   return {
     async getSetting(key) {
-      const data = await readDb();
-      return data.settings[key];
+      const val = await redis.hget('settings', key);
+      return val !== null ? val : DEFAULTS.settings[key];
     },
     async getSettings(keys) {
-      const data = await readDb();
       const result = {};
-      for (const k of keys) result[k] = data.settings[k];
+      for (const k of keys) {
+        const val = await redis.hget('settings', k);
+        result[k] = val !== null ? val : DEFAULTS.settings[k];
+      }
       return result;
     },
     async setSetting(key, value) {
-      const data = await readDb();
-      data.settings[key] = value;
-      await writeDb(data);
+      await redis.hset('settings', { [key]: value });
     },
     async setSettings(obj) {
-      const data = await readDb();
-      Object.assign(data.settings, obj);
-      await writeDb(data);
+      await redis.hset('settings', obj);
     },
     async addSignature({ first_name, last_name, phone, consent }) {
-      const data = await readDb();
-      const sig = {
-        id: data.next_sig_id++,
-        first_name, last_name, phone, consent,
-        created_at: new Date().toISOString()
-      };
-      data.signatures.push(sig);
-      await writeDb(data);
+      const id = await redis.incr('sig:counter');
+      const sig = { id, first_name, last_name, phone, consent, created_at: new Date().toISOString() };
+      await redis.lpush('signatures', JSON.stringify(sig));
       return sig;
     },
     async getSignatures() {
-      const data = await readDb();
-      return [...data.signatures].reverse();
+      const items = await redis.lrange('signatures', 0, -1);
+      return items.map(i => typeof i === 'string' ? JSON.parse(i) : i);
     },
     async countSignatures() {
-      const data = await readDb();
-      return data.signatures.length;
+      return await redis.llen('signatures');
     },
     async addLog({ action, ip, user_agent, details }) {
-      const data = await readDb();
-      const log = {
-        id: data.next_log_id++,
-        action, ip: ip || "", user_agent: user_agent || "", details: details || "",
-        created_at: new Date().toISOString()
-      };
-      data.user_logs.push(log);
-      if (data.user_logs.length > 500) data.user_logs = data.user_logs.slice(-500);
-      await writeDb(data);
+      const id = await redis.incr('log:counter');
+      const log = { id, action, ip: ip || '', user_agent: user_agent || '', details: details || '', created_at: new Date().toISOString() };
+      await redis.lpush('logs', JSON.stringify(log));
+      await redis.ltrim('logs', 0, 499);
       return log;
     },
     async getLogs() {
-      const data = await readDb();
-      return [...data.user_logs].reverse().slice(0, 500);
+      const items = await redis.lrange('logs', 0, 499);
+      return items.map(i => typeof i === 'string' ? JSON.parse(i) : i);
     }
   };
 }
 
 module.exports = { getDb };
-
